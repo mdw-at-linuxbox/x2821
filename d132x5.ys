@@ -1,0 +1,7 @@
+read_verilog -sv -I. -DYOSYS=1 d132x5.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix d132x5 -format dot -stretch d132x5

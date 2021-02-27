@@ -1,0 +1,80 @@
+verilog version of IBM 2821
+control unit for ibm 2540 card reader punch and ibm 1403 printer
+
+_tb.v - iverilog testbeds
+.ys	- yosys scripts usually to make dot/pdf
+
+NOTES.1
+	this file
+NOTES.x2821
+	notes on 2821.
+ccc9.v
+	ebcdic -> holes
+	if/boolean based on code structure
+ccc12.v
+	holes -> ebcdic
+	if/boolean based on code structure
+ccc13.v
+	holes -> ebcdic
+	if/boolean based on code structure
+	combinational output version
+ccc18.v
+	holes -> ebcdic
+	ald logic
+	pure combinational version
+d132x5.v
+	decode dual dec+100s to 1 of 132 bits.  direct decode, just the decoder
+dec2bin1.v
+	dual 2 of 5 + hundreds -> binary address conversion
+decade6.v
+	decade counter (2 of 5); with clear=set0, edge sensitive.
+decade7.v
+	decade counter (2 of 5); with set0 set9, edge sensitive.
+decade12.v
+	decade counter (2 of 5); with clear=set0, ac advance but dc sets
+decade14.v
+	decade counter (2 of 5); for prt: set6 set3 set0
+decchk1.v
+	decade 2 of 5 validation: are exactly 2 bits 1?
+delay1.v
+	configurable delay line; shift signal in time.
+delay2.v
+	configurable delay line; shorten signal (match ibm's aqq).
+docount1.v
+	double shift register: count 1 to 12 by shifting.
+dodecode3.v
+	decode 1 of 12 channel to 4-bit binary value (1-12); non-priority (gigo)
+e2bcd1.v
+	ebcdic to "bcd"=printer chain code
+latch1.v
+	latch for cons2150
+latch2.v
+	edge sensitive latch for 2821.
+latch3.v
+	faster output latch for 2821.
+rlim4.v
+	rate limiter; simplified low prec fixed point.
+sim1403x3
+	simulate 1403 timing pulses, carriage motor, hammers
+ss1.v
+	single shot - not quite ibm function
+ss2.v
+	single shot - cons2150
+trigger2.v
+	improved "adc" emulator does not need i_rst
+trigger3.v
+	ibm trigger with dual set, dual reset extenders
+x2821.v
+	2821 control unit for 1403 printer and 2540 card reader punch
+pdetect1.v
+	edge detect
+x2821_tb.v
+	test card punch logic
+x2821a_tb.v
+	test card reader logic
+x2821b_tb.v
+	test printer logic
+x2821.ys
+	make dot output - large and unreadable
+sim2540x1.v
+	simulate card read punch

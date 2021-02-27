@@ -1,0 +1,4 @@
+read_verilog -sv -I . x2821.v
+hierarchy -simcheck -nodefaults -libdir . -top x2821
+stat
+show -prefix x2821 -format dot -stretch x2821

@@ -1,0 +1,7 @@
+read_verilog -sv -I. -DYOSYS=1 decade6.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix decade6 -format dot -stretch decade6

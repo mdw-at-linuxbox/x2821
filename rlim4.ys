@@ -1,0 +1,7 @@
+read_verilog -sv -I. -DYOSYS=1 rlim4.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix rlim4 -format dot -stretch rlim4

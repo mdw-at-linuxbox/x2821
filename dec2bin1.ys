@@ -1,0 +1,4 @@
+read_verilog -sv -I . dec2bin1.v
+hierarchy -simcheck -nodefaults -libdir . -top dec2bin1
+stat
+show -prefix dec2bin1 -format dot -stretch dec2bin1

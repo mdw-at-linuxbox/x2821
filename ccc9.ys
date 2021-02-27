@@ -1,0 +1,7 @@
+read_verilog -sv ccc9.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix ccc9 -format dot -stretch

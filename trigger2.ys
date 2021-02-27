@@ -1,0 +1,7 @@
+read_verilog -sv -I. -DYOSYS=1 trigger2.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix trigger2 -format dot -stretch trigger2

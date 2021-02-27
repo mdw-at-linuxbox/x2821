@@ -1,0 +1,3 @@
+read_verilog -sv -I . d132x5.v
+hierarchy -simcheck -nodefaults -libdir . -top d132x5
+synth_ice40 -top d132x5 -blif /tmp/blif6a.blif

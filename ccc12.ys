@@ -1,0 +1,7 @@
+read_verilog -sv ccc12.v
+prep -nokeepdc
+opt
+#select -module chan1
+share
+#qwp
+show -prefix ccc12 -format dot -stretch

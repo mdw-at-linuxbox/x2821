@@ -1,0 +1,216 @@
+x2821 notes,
+
+in general: the 2821 is a close cousin of the 1414 I/O synchronizer
+and could be described as a "double speed" version of that.  However,
+nearly every technical detail is different, so the 1414 description
+can only be used as a general guide as to what the 2821 needs to do.
+
+The 2821 had provisions to plug in a CE panel with extra controls to
+debug the hardware.  The panel could run various operations offline to
+debug most aspects of the 2821.  At least some CE switches were
+permanently available inside the 2821.
+
+Interface lines
+
+1. bus interface
+
+interface to S/360 (FIPS 60) bus and tag bus.
+
+Unit addressing is done using hard-wired cards.  The address
+had to be wired in twice with parity, once for address matching,
+then separately to return the address upon selection.
+
+On the faster 360s, the multiplexor bus could run up to 180 kb/s.
+The 2821 appears to have been capable of running burst speeds of up
+to 200 kbs.  Both the bus and tag bus, and most of the 2821 internal
+logic consists of relatively slow open collector lines; this means at
+these speeds there are significant logic delays, both inside the 2821,
+and between the 2821 and the channel.
+
+2. 2540
+
+The 2540 reads and punches cards row-wise.  Per-row timing is mechanically
+determined.  For each row, the 2821 reads a row one bit at a time,
+addressed sequentially via rpaddr.  The reader and punch operate
+independently, at different speeds.  Within the reader and punch are
+multiple card stations.  Cards pass sequentially through each station.
+Rows are presented simultaneously at the rd1,rd2 stations, and at the
+pfr,punch,pch-chk stations.  There is a post-read station permitting
+the computer arbitrary time to process the card before deciding to
+which stacker to send the card.  For the punch, stacking selection
+happens at the time the card is punched, but the card is automatically
+diverted if it fails the punch check.  Note that when the punch check
+fails, the following possibly good card has already been punched.
+reader processes cards 9-8-7-6-5-4-3-2-1-0-E-T.  punch processes cards
+T-E-0-1-2-3-4-5-6-7-8-9.  reader and punch bits are addressed 1-80.
+The punch hammer actually moves an interposer in the way of the
+actual hammer that can then push the punch die through the card.
+
+There appears to be additional electronic logic in the 2540 (to handle
+initial card feed-in etc.  Also not clear: row bits may be stored in
+magnetic storage; there are additional timing signals are presented
+that do not otherwise make sense.  Additionally it appears address 0 is
+also accessed immediately before and might be used to trigger per-row
+processing.  This logic is not described in any detail.
+
+There appear to be 48 signal lines, 20 from the rdr pch, 28 going to it.
+All are "C" voltage level, some are active high, others are active low.
+Some of the more important ones include:
+common:
+	o_rpaddr	- decimal: 2 of 5 tens, 2 of 5 units
+			addresses a single reader or punch column.
+			The 2 of 5 code used is not the same as
+			the bi-quinary flavour in the 1401/1410.
+punch:
+	punch_feed	- trigger a punch cycle
+	pfr_row_bit	- 1 bit input from pfr reader
+	punch_cycle	- 1 to enable punch_hammer/rpaddr, one bit.
+	punch_hammer	- 1 means punch this column/row.
+	pch_chk_row_bit	- read after punch
+	punch_scan_cb	- start punch scan now (to fire hammers).
+	punch_brush_impulse - punch pfr & pch-chk bits window. (per-row)
+	pch_clutch_set	- goes true 4 times per punch cycle,
+			semi-independently of the row index.
+	after_9_emitter	- trailing edge of card.
+
+reader:
+	read_feed	- trigger a reader cycle
+	read_impulse_cb	- rd1 and rd2 bits window. (per-row)
+	read_cycle	- addressing one row/column.
+	rd_1_row_bit
+	rd_2_row_bit
+
+The 2025 documentation provides some hints on 2540 logic.
+end-file is a latch set by a push button on the 2540.
+When the hopper empties, if end-file is not set, feeding stops
+and ready drops.  otherwise, unit-exception is set,
+end-file cleared, and ready / card feeding continues until
+there are no cards in the card path.
+
+There is a "non-process runout" (npro) button.  This sets a latch which
+remains set while feeding happens until there are no cards in
+the card path.  During this the unit remains not-ready and no data
+goes to the computer.
+
+time-075-150 - clear internal latches for row-bits.
+time-150-450 - enables read-out for pch-chk, pfr, rd1, rd2.
+time-225-525 - enables punch hammers (along with punch-decode, punch-cycle)
+4-bit-modify-pull-on is set during punch run-in, allows pfr
+	row bits to be read into buffer storage.
+unit exception is cleared by power-on-reset.
+gate-complete: when at "feed stop" position (and not feeding?)
+
+3. 1403
+
+The 1403 interface is generally much better documented.
+Unlike the 2540, nearly all of the control electronics live
+in the control unit.  This includes the hammer drivers.
+This means 262 wires go out to the printer, 2 for each print
+hammer.
+
+sense amp 1, 2:	complement of each other, indicate subscan start,
+	extra pulse inserted to indicate home position of chain.
+stop brushes, slow brushes: for carriage control
+mag emitter - trips per line
+60 v sense - indicates a hammer fired. (?)
+low and high speed start/stop: controls paper advance.
+hammer fire - 132 lines.  should pulse 1.2ms or so, not more than
+	once every 40 ms.
+hammers do not fire all at once, but vernier across the line;
+	every 3rd hammer aligns with every 2nd print chain element,
+	every 5 microseconds; after 3 subscans, all hammers covered,
+	and chain will have advance +1 total.
+The 2821 digital logic only triggers a hammer for <5 microseconds.
+The hammer card in the 2821 is a single-shot that when triggered
+will fire for 1.1-1.5 milliseconds.
+
+4. 2821
+physical packaging sms, very like 1401/1410.
+rack design similar to other 360 peripherals.
+
+Speeds.
+electronic: 10-100 ns.  "sdtdl" logic; mostly bipolar/diode/resistor logic.
+	single shots and delay lines provide some control over
+	internal timing.
+core memory; 5 or 11 microsecond cycle time.  clock driven.
+	reader-punch share a clock and use different parts of
+		the same buffer.
+	printer has its own separate clock and buffer.
+		printer clock runs at same speed as hammers.
+electromagnetic: relays and impulse coils.  typical 1-2 ms operating time.
+hydraulic: - paper advance on 1403 (33 or 75 ips)
+mechanical - paper movement, card movement, etc.
+	53.2 ms per print line (3 print subscans, carriage motion)
+	60 or 200 ms per card
+much of the reader/punch mechanical timing is done in terms of
+	"degrees" of motion of a circular actuating mechanism.
+	this is driven by a clutch which is engaged for one
+	complete cycle of operation.  note reader and punch
+	operate independently, at different speeds.
+
+5. fpga implementation notes.
+
+rpaddr for the 2540 is a decimal 2 of 5 code; in this implementation
+that's also made available as a conventional binary number.  The binary
+number is used to address ram in the fpga.
+
+In the 2821, many of the logic lines are complemented.  I've not preserved
+that distinction in the fpga; I've tried to stick with the "logical"
+sense instead.  Complications of this are that in some cases, both the +
+and - forms of the signal are present, and they are not always the same.
+Additionally, many signals are "open collector" or'd, and in some cases,
+the different drivers for a line are scattered.
+
+Names are not always consistent everywhere, especially in the ild, and
+also between the ild and ald.  There are also a few cases of the same
+name being used for things that are not quite same.  For the ild, it was
+sometimes hard to figure out the intended logic of a deeply nested and
+concatenated series of possibly complemented gates.  The alds presented
+their own difficulties.
+
+The 2821 logic appears to have various race conditions that were resolved
+by introducing small delays as needed.  The fpga logic does not have the
+same delay characteristics, and modeling the original characteristics
+did not seem to have value.  Instead, in the fpga logic I've added extra
+blocking logic where it seemed necessary to secure proper operation.
+
+The 2821 included decimally addressed core storage.  Core memory has
+complicated timing and destructive read-out.  I've simulated this with
+binary addressed fpga ram.
+
+Triggers and latches.  The original logic used combinatorial latches,
+delay lines using actual coils of wire, other delay logic using capacitor
+discharge, and triggers which had ac coupled set and reset lines.
+I've approximated most of these using conventional clock-driven fpga logic.
+In some cases, latches have wire-or'ed sets or clears; sometimes referred
+to as "pull-over" lines; this means the output value from the latch
+could be visible if there are any other uses of that wire.
+
+The alds I have are incomplete, and the ild also lacks detail.  For the
+missing logic, as necessary, I've made my best guess.  For some of the
+details, including the CE panel and optional features, I've punted.
+
+For the printer, I decode the hammer lines, but I don't
+simulate the final 2 ms timing on the one shots that drive the
+print hammers.  The actual one-shot hardware on the 2821
+did this, and also featured a "warm timeout" inhibit that kept
+them from firing too often and burning out the print hammer coils.
+
+character encoding.  pcg - print encoding is not described in any detail
+in the ild, and is entirely missing from the alds.  It *is* documented in
+SY22-2851-1 (IBM field engineering handbook, system/360, general) For
+the punched card encoding and decoding; this was missing from the ild,
+so I wrote my own.  The ald does have this, but my version turns out to
+be slightly more economical for the fpga.
+
+6. thoughts.
+
+print hammers: a better design might do the one-shots & final stage
+of decoding on its own boards, and merely have the core printer logic
+generate the address.
+
+buffer: might be better not to generate a binary address but just use
+the decimal address straight.  argument: luts are more in demand for the
+2821: ram is comparatively plentiful.  conversely: can economize on ram
+by addressing byte slices in separate time units:  argument: ram is much
+faster, and the address bus is much wider than the data is wide.

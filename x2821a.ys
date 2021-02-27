@@ -1,0 +1,3 @@
+read_verilog -sv -I . x2821.v
+hierarchy -simcheck -nodefaults -libdir . -top x2821
+synth_ice40 -top x2821 -blif /tmp/x2821a.blif

@@ -1,0 +1,4 @@
+read_verilog -sv -I . pcg4.v
+hierarchy -simcheck -nodefaults -libdir . -top pcg4
+stat
+show -prefix pcg4 -format dot -stretch pcg4

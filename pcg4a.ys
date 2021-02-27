@@ -1,0 +1,3 @@
+read_verilog -sv -I . pcg4.v
+hierarchy -simcheck -nodefaults -libdir . -top pcg4
+synth_ice40 -top pcg4 -blif /tmp/pcg4a.blif
